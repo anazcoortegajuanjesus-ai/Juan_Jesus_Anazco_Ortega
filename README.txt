@@ -1,0 +1,3 @@
+Al iniciar la aplicación, el usuario accede a una pantalla de inicio de sesión, donde ingresa sus credenciales. Una vez autenticado, se muestra el panel principal (dashboard), que incluye un resumen global con el total de monedas insertadas, la cantidad de premios otorgados y el saldo general disponible entre todas las máquinas.
+
+Cada máquina tragamonedas se representa mediante una tarjeta individual que detalla su nombre, ubicación, número de monedas ingresadas, premios otorgados y saldo actual. Los datos se muestran de forma clara y visualmente atractiva, utilizando colores distintivos para cada métrica (morado, verde y azul), además de un diseño con gradientes y bordes redondeados para optimizar la legibilidad en pantallas móviles.
