@@ -1,0 +1,311 @@
+import flet as ft
+from datetime import datetime
+
+# Datos de ejemplo de tragamonedas
+def get_initial_slot_machines():
+    return [
+        {
+            'id': '1',
+            'name': 'Jackpot Deluxe',
+            'location': 'Zona A - Entrada Principal',
+            'coins_inserted': 15420,
+            'prizes_won': 342,
+            'current_balance': 8950,
+        },
+        {
+            'id': '2',
+            'name': 'Lucky 777',
+            'location': 'Zona B - Sala VIP',
+            'coins_inserted': 22150,
+            'prizes_won': 478,
+            'current_balance': 12300,
+        },
+        {
+            'id': '3',
+            'name': 'Mega Fortune',
+            'location': 'Zona C - Piso 2',
+            'coins_inserted': 18900,
+            'prizes_won': 401,
+            'current_balance': 10200,
+        },
+        {
+            'id': '4',
+            'name': 'Diamond Rush',
+            'location': 'Zona A - Centro',
+            'coins_inserted': 13200,
+            'prizes_won': 298,
+            'current_balance': 7100,
+        },
+    ]
+
+
+class SlotMachineApp:
+    def __init__(self, page: ft.Page):
+        self.page = page
+        self.slot_machines = get_initial_slot_machines()
+        self.is_logged_in = False
+        
+        # Configurar página para móvil
+        self.page.title = "Administrador de Tragamonedas"
+        self.page.window_width = 400
+        self.page.window_height = 800
+        self.page.window_resizable = False
+        self.page.padding = 0
+        self.page.bgcolor = ft.Colors.PURPLE_700
+        
+        # Mostrar login inicial
+        self.show_login()
+    
+    def show_login(self):
+        """Pantalla de inicio de sesión"""
+        self.username_field = ft.TextField(
+            label="Usuario",
+            prefix_icon=ft.Icons.PERSON,
+            border_radius=8,
+            bgcolor=ft.Colors.WHITE,
+        )
+        
+        self.password_field = ft.TextField(
+            label="Contraseña",
+            prefix_icon=ft.Icons.LOCK,
+            password=True,
+            can_reveal_password=True,
+            border_radius=8,
+            bgcolor=ft.Colors.WHITE,
+        )
+        
+        login_button = ft.ElevatedButton(
+            "Iniciar Sesión",
+            width=300,
+            height=45,
+            bgcolor=ft.Colors.PURPLE_600,
+            color=ft.Colors.WHITE,
+            on_click=self.handle_login,
+        )
+        
+        login_view = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Container(height=100),
+                    ft.Container(
+                        width=80,
+                        height=80,
+                        bgcolor=ft.Colors.ORANGE_500,
+                        border_radius=40,
+                        alignment=ft.alignment.center,
+                        content=ft.Icon(
+                            ft.Icons.LOCK,
+                            size=40,
+                            color=ft.Colors.WHITE,
+                        ),
+                    ),
+                    ft.Text(
+                        "Administrador de Tragamonedas",
+                        size=22,
+                        weight=ft.FontWeight.BOLD,
+                        color=ft.Colors.WHITE,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Text(
+                        "Ingresa tus credenciales para acceder",
+                        size=14,
+                        color=ft.Colors.WHITE70,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    ft.Container(height=30),
+                    ft.Container(
+                        content=ft.Column(
+                            controls=[
+                                self.username_field,
+                                self.password_field,
+                                ft.Container(height=10),
+                                login_button,
+                            ],
+                            spacing=15,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        width=320,
+                        padding=20,
+                        bgcolor=ft.Colors.WHITE,
+                        border_radius=12,
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_left,
+                end=ft.alignment.bottom_right,
+                colors=[ft.Colors.PURPLE_600, ft.Colors.PURPLE_800, ft.Colors.INDIGO_800],
+            ),
+            expand=True,
+        )
+        
+        self.page.controls.clear()
+        self.page.add(login_view)
+        self.page.update()
+    
+    def handle_login(self, e):
+        """Manejar inicio de sesión"""
+        if self.username_field.value and self.password_field.value:
+            self.is_logged_in = True
+            self.show_menu()
+    
+    def show_menu(self):
+        """Pantalla principal"""
+        total_coins = sum(m['coins_inserted'] for m in self.slot_machines)
+        total_prizes = sum(m['prizes_won'] for m in self.slot_machines)
+        total_balance = sum(m['current_balance'] for m in self.slot_machines)
+        
+        header = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Column(
+                        controls=[
+                            ft.Text("Panel de Control", size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            ft.Text("Gestión de Tragamonedas", size=12, color=ft.Colors.WHITE70),
+                        ],
+                        spacing=2,
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.LOGOUT,
+                        icon_color=ft.Colors.WHITE,
+                        on_click=self.handle_logout,
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
+            bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.WHITE),
+            padding=15,
+        )
+        
+        summary_cards = ft.Row(
+            controls=[
+                self.create_summary_card("Total Monedas", f"{total_coins:,}", ft.Colors.PURPLE_600),
+                self.create_summary_card("Premios", str(total_prizes), ft.Colors.GREEN_600),
+                self.create_summary_card("Saldo Total", f"{total_balance:,}", ft.Colors.BLUE_600),
+            ],
+            spacing=8,
+        )
+        
+        slot_machine_list = ft.Column(
+            controls=[
+                self.create_slot_machine_card(machine)
+                for machine in self.slot_machines
+            ],
+            spacing=0,
+        )
+        
+        menu_content = ft.Container(
+            content=ft.Column(
+                controls=[
+                    header,
+                    ft.Container(
+                        content=ft.Column(
+                            controls=[
+                                summary_cards,
+                                ft.Container(height=10),
+                                ft.Container(
+                                    content=ft.Column(
+                                        controls=[
+                                            ft.Container(
+                                                content=ft.Row(
+                                                    controls=[
+                                                        ft.Icon(ft.Icons.CASINO, color=ft.Colors.YELLOW_700, size=20),
+                                                        ft.Text("Mis Tragamonedas", size=16, weight=ft.FontWeight.BOLD),
+                                                    ],
+                                                    spacing=8,
+                                                ),
+                                                padding=15,
+                                            ),
+                                            slot_machine_list,
+                                        ],
+                                    ),
+                                    bgcolor=ft.Colors.WHITE,
+                                    border_radius=12,
+                                ),
+                            ],
+                            scroll=ft.ScrollMode.AUTO,
+                            spacing=15,
+                        ),
+                        padding=15,
+                        expand=True,
+                    ),
+                ],
+            ),
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_left,
+                end=ft.alignment.bottom_right,
+                colors=[ft.Colors.PURPLE_600, ft.Colors.PURPLE_700, ft.Colors.INDIGO_800],
+            ),
+            expand=True,
+        )
+        
+        self.page.controls.clear()
+        self.page.add(menu_content)
+        self.page.update()
+    
+    def create_summary_card(self, title, value, color):
+        """Crear tarjeta de resumen"""
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(title, size=11, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
+                    ft.Text(value, size=16, weight=ft.FontWeight.BOLD, color=color, text_align=ft.TextAlign.CENTER),
+                ],
+                spacing=5,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            bgcolor=ft.Colors.WHITE,
+            border_radius=8,
+            padding=12,
+            expand=True,
+        )
+    
+    def create_slot_machine_card(self, machine):
+        """Crear tarjeta de tragamonedas"""
+        return ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Column(
+                        controls=[
+                            ft.Text(machine['name'], size=15, weight=ft.FontWeight.BOLD),
+                            ft.Row(
+                                controls=[
+                                    ft.Icon(ft.Icons.LOCATION_ON, size=14, color=ft.Colors.GREY_500),
+                                    ft.Text(machine['location'], size=12, color=ft.Colors.GREY_600),
+                                ],
+                                spacing=4,
+                            ),
+                            ft.Row(
+                                controls=[
+                                    ft.Text("Monedas: ", size=12, color=ft.Colors.GREY_600),
+                                    ft.Text(f"{machine['coins_inserted']:,}", size=12, color=ft.Colors.PURPLE_600, weight=ft.FontWeight.BOLD),
+                                    ft.Container(width=10),
+                                    ft.Text("Saldo: ", size=12, color=ft.Colors.GREY_600),
+                                    ft.Text(f"{machine['current_balance']:,}", size=12, color=ft.Colors.BLUE_600, weight=ft.FontWeight.BOLD),
+                                ],
+                                spacing=0,
+                            ),
+                        ],
+                        spacing=5,
+                        expand=True,
+                    ),
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
+            padding=15,
+            border=ft.border.only(bottom=ft.border.BorderSide(1, ft.Colors.GREY_200)),
+        )
+    
+    def handle_logout(self, e):
+        """Cerrar sesión"""
+        self.is_logged_in = False
+        self.show_login()
+
+
+def main(page: ft.Page):
+    SlotMachineApp(page)
+
+
+ft.app(target=main)
